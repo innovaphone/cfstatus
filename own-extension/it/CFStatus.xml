@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<voicemail>
+<!-- innovaphone Call Forward Unconditional Status Prompter == inno srl V1.00 KWA 2009 -->
+	<function define="PromptString">
+  		<assign out="$i" value="1" /> 
+  		<assign out="$c" value="" /> 
+  		<index value="$string" pos="$i" size="1" out="$c" /> 
+  		<lib-strlen string="$c" out="$len-c" /> 
+		<while cond="$len-c">
+			<switch var="$c">
+			<case equal="*">
+  				<assign out="$filename" value="_star.$coder" /> 
+  			</case>
+			<case equal="#">
+  				<assign out="$filename" value="_hash.$coder" /> 
+  			</case>
+			<default>
+  				<lib-strcat string="_" string2="$c" out-string="$ctrl" /> 
+  				<lib-strcat string="$ctrl" string2=".$coder" out-string="$filename" /> 
+  			</default>
+  			</switch>
+  			<store-get root="" name="$filename" out-url="$ctrl" /> 
+  			<pbx-prompt url="$ctrl" barge-in="false" /> 
+  			<add value="$i" value2="1" out="$i" /> 
+  			<assign out="$c" value="" /> 
+  			<index value="$string" pos="$i" size="1" out="$c" /> 
+  			<lib-strlen string="$c" out="$len-c" /> 
+  			</while>
+  	</function>
+	<function define="readCFW">
+		<store-get root="" name="derTeilnehmer.$coder" out-url="$ctrl" /> 
+		<pbx-prompt url="$ctrl" /> 
+  		<assign out="$string" value="$Teiln" />
+		<call name="PromptString" />
+		<pbx-query-obj name="$cn" type="cfu" out="$to" />
+		<if notcond="$to">	
+			<store-get root="" name="kFesteARU.$coder" out-url="$ctrl" /> 
+			<pbx-prompt url="$ctrl" />
+			<return />
+		</if>	
+		<store-get root="" name="umgeleitet.$coder" out-url="$ctrl" /> 
+		<pbx-prompt url="$ctrl" /> 
+		<assign out="$string" value="$to" />
+		<call name="PromptString" /> 
+	</function>
+<!-- Main routine  -->
+	<function define="Main">
+		<event type="timer" name="vbguard">
+  		  		<pbx-disc /> 
+  		</event>
+		<timer name="vbguard" sec="60" />
+		<pbx-getcallinfo out-cgpn="$cgpn" out-cdpn="$cdpn" out-leg2="$leg2" />
+		<assign out="$teiln" value="$cgpn" />
+		<pbx-finduser-e164 e164="$teiln" out-cn="$cn"/> 
+		<call name="readCFW" />
+		<pbx-disc /> 		
+      </function>    
+</voicemail>
+<!-- check CFU status wiki-src/xml/CFstatus 1,0,0,0 (C) innovaphone AG 2010-2010 -->
